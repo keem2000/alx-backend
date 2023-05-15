@@ -1,17 +1,37 @@
 #!/usr/bin/env python3
-""" Hypermedia Pagination """
+"""Replicate code from the previous task.
+
+Implement a get_hyper method that takes the same arguments
+(and defaults) as get_page and returns a dictionary containing
+the following key-value pairs:
+
+page_size: the length of the returned dataset page
+page: the current page number
+data: the dataset page (equivalent to return from previous task)
+next_page: number of the next page, None if no next page
+prev_page: number of the previous page, None if no previous page
+total_pages: the total number of pages in the dataset as an integer
+Make sure to reuse get_page in your implementation.
+
+You can use the math module if necessary.
+"""
+
+
+from typing import Tuple, List
 import csv
-from math import ceil
-from typing import List, Tuple
+import math
 
 
 def index_range(page: int, page_size: int) -> Tuple[int, int]:
-    """ Simple helper function """
-
-    start = (page - 1) * page_size
-    end = page * page_size
-
-    return (start, end)
+    """
+    start index and an end index corresponding to the range of
+    """
+    # if page is 1, start at 0 and end at page_size
+    # if page is 2, start at ((page-1) * page_size) and
+    # end at (page_size * page)
+    # if page is 3, start at ((page-1) * page_size) and
+    # end at (page_size * page)
+    return ((page-1) * page_size, page_size * page)
 
 
 class Server:
@@ -32,46 +52,50 @@ class Server:
             self.__dataset = dataset[1:]
 
         return self.__dataset
-
+                                                                                            
     def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
-        """ Finds pagination of dataset """
-        assert isinstance(page, int) and page > 0
-        assert isinstance(page_size, int) and page > 0
+        """return the appropriate page of the dataset"""
+        assert type(page) is int and page > 0
+        assert type(page_size) is int and page_size > 0
 
-        self.dataset()
+        # get the data from the csv
+        data = self.dataset()
 
-        if self.__dataset is None:
+        try:
+            # get the index to start and end at
+            start, end = index_range(page, page_size)
+            return data[start:end]
+        except IndexError:
             return []
 
-        idx_range = index_range(page, page_size)
-        data = self.__dataset[idx_range[0]:idx_range[1]]
-        return data
-
     def get_hyper(self, page: int = 1, page_size: int = 10) -> dict:
-        """ Provides information about dataset """
+        """returns a dictionary containing the following key-value pairs
+        """
+        assert type(page) is int and page > 0
+        assert type(page_size) is int and page_size > 0
+
         data = self.get_page(page, page_size)
+        total_pages = math.ceil(len(self.dataset()) / page_size)
 
-        data_set = self.__dataset
-        len_set = len(data_set) if data_set else 0
+        start, end = index_range(page, page_size)
 
-        total_pages = ceil(len_set / page_size) if data_set else 0
-
-        if not data:
-            page_size = 0
+        # estimating the next page
+        if (page < total_pages):
+            next_page = page+1
         else:
-            page_size = len(data)
+            next_page = None
 
-        prev_page = page - 1 if page > 1 else None
-        next_page = page + 1 if page < total_pages else None
+        # estimating the previous page
+        if (page == 1):
+            prev_page = None
+        else:
+            prev_page = page - 1
 
-        hyper = {
-            'page_size': page_size,
-            'page': page,
-            'data': data,
-            'next_page': next_page,
-            'prev_page': prev_page,
-            'total_pages': total_pages
-        }
-
-        return hyper
+        return {'page_size': len(data),
+                'page': page,
+                'data': data,
+                'next_page': next_page,
+                'prev_page': prev_page,
+                'total_pages': total_pages
+                }
     

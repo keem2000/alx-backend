@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
+"""Deletion-resilient hypermedia pagination
 """
-Deletion-resilient hypermedia pagination
-"""
-
 import csv
-import math
-from typing import List, Dict
+from typing import Dict, List
 
 
 class Server:
@@ -14,6 +11,8 @@ class Server:
     DATA_FILE = "Popular_Baby_Names.csv"
 
     def __init__(self):
+        """Initializes a new Server instance.
+        """
         self.__dataset = None
         self.__indexed_dataset = None
 
@@ -40,33 +39,26 @@ class Server:
         return self.__indexed_dataset
 
     def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
-        """ Deletion-resilient hypermedia pagination """
-
-        idx_dataset = self.indexed_dataset()
-
-        assert isinstance(index, int) and index < (len(idx_dataset) - 1)
-
-        i, mv, data = 0, index, []
-        while (i < page_size and index < len(idx_dataset)):
-            value = idx_dataset.get(mv, None)
-            if value:
-                data.append(value)
-                i += 1
-            mv += 1
-
+        """Retrieves info about a page from a given index and with a
+        specified size.
+        """
+        data = self.indexed_dataset()
+        assert index is not None and index >= 0 and index <= max(data.keys())
+        page_data = []
+        data_count = 0
         next_index = None
-        while (mv < len(idx_dataset)):
-            value = idx_dataset.get(mv, None)
-            if value:
-                next_index = mv
+        start = index if index else 0
+        for i, item in data.items():
+            if i >= start and data_count < page_size:
+                page_data.append(item)
+                data_count += 1                                                                                                                  continue
+            if data_count == page_size:
+                next_index = i
                 break
-            mv += 1
-
-            hyper = {
+            page_info = {
                 'index': index,
                 'next_index': next_index,
-                'page_size': page_size,
-                'data': data
+                'page_size': len(page_data),
+                'data': page_data,
             }
-
-            return hyper
+            return page_info
