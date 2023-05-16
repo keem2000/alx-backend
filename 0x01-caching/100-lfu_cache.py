@@ -52,4 +52,3 @@ class LFUCache(BaseCaching):
                     self.__stats.pop(keyOut)
             self.__stats[keyIn] = self.__stats.get(keyIn, 0) + 1
         return keyOut
-    
